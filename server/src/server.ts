@@ -1,6 +1,9 @@
+import 'dotenv/config'
+
 import fastify from 'fastify'
 import { memoriesRoutes } from './routes/memories'
 import { usersRoutes } from './routes/users'
+import { authRoutes } from './routes/auth'
 import cors from '@fastify/cors'
 
 export const startServer = async () => {
@@ -8,7 +11,9 @@ export const startServer = async () => {
   app.register(cors, {
     origin: true, // todas as URLs de front-end poderão acessar nosso back-end
   })
-  app.register(memoriesRoutes, usersRoutes)
+  app.register(authRoutes)
+  app.register(usersRoutes)
+  app.register(memoriesRoutes)
 
   app
     .listen({
