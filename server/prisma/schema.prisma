@@ -13,7 +13,7 @@ datasource db {
 model User {
   id        String   @id @default(uuid())
   gitHubId  Int      @unique
-  fullName  String
+  fullName  String // this can be null since github allows you to not display your name
   login     String
   avatar    String
   createdAt DateTime @default(now())
