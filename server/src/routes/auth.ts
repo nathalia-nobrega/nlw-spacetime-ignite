@@ -9,6 +9,7 @@ export async function authRoutes(app: FastifyInstance) {
       code: z.string(),
     })
 
+    // Trading the generated CODE for an ACCESS TOKEN
     const { code } = bodySchema.parse(req.body)
     const acessTokenResponse = await axios.post(
       'https://github.com/login/oauth/access_token',
@@ -26,6 +27,9 @@ export async function authRoutes(app: FastifyInstance) {
 
     const { access_token } = acessTokenResponse.data
 
+    /* Since this route returns public and private information about the authenticated user,
+    we need to send an Authorization to the API, so that we can make the request on behalf of the user.
+    */
     const userResponse = await axios.get('https://api.github.com/user', {
       headers: {
         Authorization: `Bearer ${access_token}`,
@@ -47,33 +51,30 @@ export async function authRoutes(app: FastifyInstance) {
       },
     })
 
+    // IF the user's info hasn't been created in the DB, we create it.
     if (!user) {
       user = await prisma.user.create({
         data: {
           gitHubId: userInfo.id,
           login: userInfo.login,
-          fullName:
-            userInfo.name != null
-              ? userInfo.name
-              : 'User did not specify a name',
+          name: userInfo.name === null ? userInfo.login : userInfo.name,
           avatar: userInfo.avatar_url,
         },
       })
     }
 
+    // Return the JWT token to authorize further requests to the server by the front-end
     const token = app.jwt.sign(
       {
-        name: user.fullName,
-        avatar: user.avatar,
+        sub: user.id,
+        name: user.name,
+        userAvatar: user.avatar,
       },
       {
-        sub: user.id,
         expiresIn: '15 days',
       },
     )
 
-    return {
-      token,
-    }
+    return token
   })
 }
