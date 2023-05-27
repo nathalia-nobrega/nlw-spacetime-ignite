@@ -1,3 +1,4 @@
+import { styled } from 'nativewind'
 import {
   ImageBackground,
   StatusBar,
@@ -5,35 +6,15 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
-// import { Hero } from './src/components/Hero'
 
-import { styled } from 'nativewind'
-
-import Logo from './src/assets/logo.svg'
-import blurBg from './src/assets/luz.png'
-import Stripes from './src/assets/stripes.svg'
-
-import {
-  Roboto_400Regular,
-  Roboto_700Bold,
-  useFonts,
-} from '@expo-google-fonts/roboto'
-
-import { BaiJamjuree_700Bold } from '@expo-google-fonts/bai-jamjuree'
-import React from 'react'
+import Logo from '../assets/logo.svg'
+import blurBg from '../assets/luz.png'
+import Stripes from '../assets/stripes.svg'
 
 const StyledStripes = styled(Stripes)
 const NLWLogo = styled(Logo)
 
-export default function App() {
-  const [hasLoadedFonts] = useFonts({
-    Roboto_400Regular,
-    Roboto_700Bold,
-    BaiJamjuree_700Bold,
-  })
-
-  if (!hasLoadedFonts) return null
-
+export const Hero = () => {
   return (
     <ImageBackground
       source={blurBg}
@@ -64,7 +45,7 @@ export default function App() {
       <Text className="text-center font-body text-sm leading-relaxed text-gray-200">
         Made with 💜 at Rocketseat's NLW
       </Text>
-      <StatusBar style="light" translucent />
+      <StatusBar translucent />
     </ImageBackground>
   )
 }
