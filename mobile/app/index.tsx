@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 import {
   ImageBackground,
   StatusBar,
@@ -5,13 +6,15 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
-// import { Hero } from './src/components/Hero'
+
+import * as SecureStore from 'expo-secure-store'
+import { useRouter } from 'expo-router'
 
 import { styled } from 'nativewind'
 
-import Logo from './src/assets/logo.svg'
-import blurBg from './src/assets/luz.png'
-import Stripes from './src/assets/stripes.svg'
+import Logo from '../src/assets/logo.svg'
+import blurBg from '../src/assets/luz.png'
+import Stripes from '../src/assets/stripes.svg'
 
 import {
   Roboto_400Regular,
@@ -20,17 +23,65 @@ import {
 } from '@expo-google-fonts/roboto'
 
 import { BaiJamjuree_700Bold } from '@expo-google-fonts/bai-jamjuree'
-import React from 'react'
+import { makeRedirectUri, useAuthRequest } from 'expo-auth-session'
+import React, { useEffect } from 'react'
+import { api } from '../src/lib/api/api'
 
 const StyledStripes = styled(Stripes)
 const NLWLogo = styled(Logo)
 
+// Endpoint
+const discovery = {
+  authorizationEndpoint: 'https://github.com/login/oauth/authorize',
+  tokenEndpoint: 'https://github.com/login/oauth/access_token',
+  revocationEndpoint:
+    'https://github.com/settings/connections/applications/7b0c99e295998a00c82d',
+}
+
 export default function App() {
+  const router = useRouter()
+
   const [hasLoadedFonts] = useFonts({
     Roboto_400Regular,
     Roboto_700Bold,
     BaiJamjuree_700Bold,
   })
+
+  // Making a request to the Auth endpoint to get the code
+  const [request, response, signInWithGitHub] = useAuthRequest(
+    {
+      clientId: '7b0c99e295998a00c82d',
+      scopes: ['identity'],
+      redirectUri: makeRedirectUri({
+        scheme: 'nlwspacetime',
+      }),
+    },
+    discovery,
+  )
+
+  async function handleGitHubOAuthCode(code: string) {
+    const response = await api.post('/register', {
+      code,
+    })
+
+    const token = response.data
+    await SecureStore.setItemAsync('token', token)
+    router.push('/memories')
+  }
+
+  // Receiving the code
+  useEffect(() => {
+    // console.log(
+    //   makeRedirectUri({
+    //     scheme: 'nlwspacetime',
+    //   }),
+    // )
+
+    if (response?.type === 'success') {
+      const { code } = response.params
+      handleGitHubOAuthCode(code)
+    }
+  }, [response])
 
   if (!hasLoadedFonts) return null
 
@@ -54,6 +105,8 @@ export default function App() {
         <TouchableOpacity
           activeOpacity={0.7}
           className="rounded-full bg-green-500 px-5 py-3"
+          onPress={() => signInWithGitHub()}
+          disabled={!request}
         >
           <Text className="font-alt text-sm uppercase text-black">
             START CREATING MEMORIES
